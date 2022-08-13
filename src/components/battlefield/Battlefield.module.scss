@@ -1,0 +1,22 @@
+.cell_wrapper {
+  &_row {
+   display: flex;
+  }
+  &_cell {
+    display: flex;
+    width: 30px;
+    height: 30px;
+    &[data-celltype]{
+      border: 1px solid;
+    }
+    &[data-celltype='0']{
+      border-color: var(--tetramino-default);
+    }
+    &[data-celltype="l"]{
+      background-color: var(--tetramino-blue);
+      border-color: var(--tetramino-blue);
+    }
+
+  }
+}
+
