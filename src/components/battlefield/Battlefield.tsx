@@ -1,13 +1,7 @@
-import React, {
-  FC,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
-import { tetraminoField } from '@/utils/tetraminos';
+import React, { FC } from 'react';
 import { TBattlefieldCells } from '@/utils/types';
 import style from './Battlefield.module.scss';
+import { useBattlefield } from '@/components/battlefield/useBattlefield';
 
 const CellWrapper: FC<{
   battlefieldMap: TBattlefieldCells;
@@ -16,56 +10,31 @@ const CellWrapper: FC<{
     <div>
       {battlefieldMap.map((row, rowIndex) => {
         return (
-          <div
-            key={rowIndex}
-            className={style.cell_wrapper_row}
-          >
+          <div key={rowIndex} className={style.cell_wrapper_row}>
             {row.map((cellValue, cellIndex) => {
-              return (
-                <div
-                  key={cellIndex}
-                  className={style.cell_wrapper_cell}
-                  data-celltype={cellValue}
-                />
-              );
+              return <div key={cellIndex} className={style.cell_wrapper_cell} data-celltype={cellValue} />;
             })}
           </div>
         );
       })}
-      {/*{[battlefieldMap[0]].map((row, rowIndex) => {*/}
-      {/*  return (*/}
-      {/*    <div key={rowIndex}>*/}
-      {/*      {row.map((cellValue, cellIndex) => {*/}
-      {/*        return <div key={cellIndex}>{cellValue}</div>;*/}
-      {/*      })}*/}
-      {/*    </div>*/}
-      {/*  );*/}
-      {/*})}*/}
     </div>
   );
 };
 
 export const Battlefield = () => {
-  const setUpdate = useReducer((x) => !x, false)[1];
-  const ref = useRef(new tetraminoField(true, setUpdate));
-  const { addFigure } = useMemo(() => {
-    return ref.current;
-  }, [ref.current]);
+  console.log('updated');
+  const { rotateTetramino, moveTetramino, startGame, setUpdate, refBattleField } = useBattlefield();
   return (
     <div>
-      <CellWrapper
-        battlefieldMap={ref.current.battlefield}
-      />
+      <CellWrapper battlefieldMap={refBattleField.current.battlefield} />
       <button onClick={setUpdate}>Update</button>
-      <button onClick={addFigure}>AddTetramino</button>
-      button
-      <pre>
-        {/*{JSON.stringify(*/}
-        {/*  ref.current.battlefield,*/}
-        {/*  null,*/}
-        {/*  '\t'*/}
-        {/*)}*/}
-      </pre>
+      <button onClick={startGame}>start game</button>
+      <button onClick={() => moveTetramino('left')}>left</button>
+      <button onClick={() => moveTetramino('right')}>right</button>
+      <button onClick={() => moveTetramino('right')}>right</button>
+      <button onClick={() => rotateTetramino()}>rotate</button>
+
+      {/*<pre onKeyDown={() => console.log('123')}>{JSON.stringify(refBattleField.current.battlefield, null, '\t')}</pre>*/}
     </div>
   );
 };
