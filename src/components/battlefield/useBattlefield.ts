@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { TetraminoField } from '@/utils/tetraminos';
 
 export const useBattlefield = () => {
-  const setUpdate = useReducer((x) => !x, false)[1];
+  const setUpdate = useReducer((x) => x, false)[1];
 
   const ref = useRef(new TetraminoField(true, setUpdate));
   const { startGame, moveTetramino, rotateTetramino } = useMemo(() => {
@@ -37,6 +37,10 @@ export const useBattlefield = () => {
       window.removeEventListener('keydown', event);
     };
   }, []);
+
+  useEffect(() => {
+    startGame();
+  }, [startGame]);
 
   return {
     startGame,

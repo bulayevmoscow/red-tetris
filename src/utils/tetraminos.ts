@@ -88,22 +88,54 @@ export class TetraminoField {
     };
 
     console.log(newPosition);
-    if (newPosition.x < 0 || newPosition.x > BATTLEFIELD_ENV.width - (this.currentFigure?.length ?? 0)) {
-      return;
-    }
-    if (newPosition.y < 0 || newPosition.y > BATTLEFIELD_ENV.height - (this.currentFigure?.length ?? 0)) {
-      return;
-    }
 
-    // const blocked = false;
-    // this.currentFigure?.forEach((row, indexRow) => {
-    //   row.forEach((value, indexCell) => {
-    //     if (this.battlefield[indexRow + y][indexCell + x]);
-    //   });
-    // });
-    this.removeTetramino(false);
-    this.offsetCurrentFigure = { ...newPosition };
-    this.addTetramino(true);
+    // if (newPosition.x < 0 || newPosition.x > BATTLEFIELD_ENV.width - (this.currentFigure?.length ?? 0)) {
+    //   return;
+    // }
+    // if (newPosition.y < 0 || newPosition.y > BATTLEFIELD_ENV.height - (this.currentFigure?.length ?? 0)) {
+    //   return;
+    // }
+
+    const status = {
+      isBlocked: false,
+      isCollision: false,
+    };
+    this.currentFigure?.forEach((row, indexRow) => {
+      row.forEach((value, indexCell) => {
+        if (status.isCollision || status.isBlocked) {
+          return;
+        }
+        if (value !== 0) {
+          // Новая позиция блока this.current.figure
+          const cellPos = {
+            x: newPosition.x + indexCell,
+            y: newPosition.y + indexRow,
+          };
+          console.log(`Can i write on y: ${cellPos.x} x:${cellPos.y} cell`);
+          if (cellPos.x < 0 || cellPos.x >= BATTLEFIELD_ENV.width) {
+            console.error('WRONG X');
+            status.isBlocked = true;
+          }
+          if (cellPos.y < 0 || cellPos.y >= BATTLEFIELD_ENV.height) {
+            console.error('WRONG Y');
+            status.isBlocked = true;
+          }
+          // check Collision
+          // TODO
+          // if (this.battlefield[cellPos.y][cellPos.x] !== 0) {
+          //   console.log(`isCollision on x: ${cellPos.x} y: ${cellPos.y} = ${this.battlefield[cellPos.y][cellPos.x]}`);
+          //   status.isCollision = true;
+          //   console.error('Collision');
+          // }
+        }
+      });
+    });
+    if (!status.isCollision && !status.isBlocked) {
+      this.removeTetramino(false);
+      this.offsetCurrentFigure = { ...newPosition };
+      this.addTetramino(true);
+    }
+    return status;
   };
 
   private removeTetramino = (shouldUpdate = true) => {
@@ -148,7 +180,7 @@ export class TetraminoField {
 
   public startGame = () => {
     //  TODO MAKE VALIDATE
-
+    console.log('start game');
     // TODO GENERATE RANDOM FIGURE
     this.battlefield = initBattleField();
     const typeFigure: keyof typeof figuresSymbols = 'line';
@@ -157,6 +189,7 @@ export class TetraminoField {
     // setInterval(() => {
     //   this.moveTetramino('down');
     // }, 500);
+    this.updateComponent();
   };
 }
 
