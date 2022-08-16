@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import { TBattlefieldCells } from '@/utils/types';
 import style from './Battlefield.module.scss';
-import { useBattlefield } from '@/components/battlefield/useBattlefield';
 import { TetraminoField } from '@/utils/tetraminos';
 
 const CellWrapper: FC<{
@@ -48,6 +47,9 @@ class Battlefield extends React.Component<Record<never, never>, MyState> {
         case 'ArrowDown':
           this.state.tetris.moveTetramino('down');
           break;
+        case 'q':
+          this.state.tetris.moveTetramino('up');
+          break;
         default:
           break;
       }
@@ -55,6 +57,7 @@ class Battlefield extends React.Component<Record<never, never>, MyState> {
   };
   componentDidMount() {
     window.addEventListener('keydown', this.state.keyBoardEvent);
+    this.state.tetris.startGame();
   }
   componentWillUnmount() {
     window.removeEventListener('keydown', this.state.keyBoardEvent);

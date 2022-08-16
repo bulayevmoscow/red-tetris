@@ -54,6 +54,7 @@ export class TetraminoField {
     this.battlefield = initBattleField();
     this.updateComponent = () =>
       setTimeout(() => {
+        console.log('want to update');
         updateComponent();
       }, 16);
     this.currentFigure = undefined;
@@ -67,9 +68,6 @@ export class TetraminoField {
     console.log(this.battlefield);
   };
 
-  private validate = () => {
-    // this.gameIsRunning = false;
-  };
   private overrideTetraminoOnBattlefield = (add: boolean) => {
     const { x, y } = this.offsetCurrentFigure;
     this.currentFigure?.forEach((row, indexRow) => {
@@ -87,19 +85,14 @@ export class TetraminoField {
       y: y + this.offsetCurrentFigure.y,
     };
 
-    console.log(newPosition);
-
-    // if (newPosition.x < 0 || newPosition.x > BATTLEFIELD_ENV.width - (this.currentFigure?.length ?? 0)) {
-    //   return;
-    // }
-    // if (newPosition.y < 0 || newPosition.y > BATTLEFIELD_ENV.height - (this.currentFigure?.length ?? 0)) {
-    //   return;
-    // }
-
     const status = {
       isBlocked: false,
       isCollision: false,
     };
+
+    // Удаляем тетраминку
+    this.removeTetramino(false);
+
     this.currentFigure?.forEach((row, indexRow) => {
       row.forEach((value, indexCell) => {
         if (status.isCollision || status.isBlocked) {
@@ -115,27 +108,92 @@ export class TetraminoField {
           if (cellPos.x < 0 || cellPos.x >= BATTLEFIELD_ENV.width) {
             console.error('WRONG X');
             status.isBlocked = true;
+            return;
           }
           if (cellPos.y < 0 || cellPos.y >= BATTLEFIELD_ENV.height) {
             console.error('WRONG Y');
             status.isBlocked = true;
+            return;
           }
           // check Collision
           // TODO
-          // if (this.battlefield[cellPos.y][cellPos.x] !== 0) {
-          //   console.log(`isCollision on x: ${cellPos.x} y: ${cellPos.y} = ${this.battlefield[cellPos.y][cellPos.x]}`);
-          //   status.isCollision = true;
-          //   console.error('Collision');
-          // }
+          if (this.battlefield[cellPos.y][cellPos.x] !== 0) {
+            console.log(`isCollision on x: ${cellPos.x} y: ${cellPos.y} = ${this.battlefield[cellPos.y][cellPos.x]}`);
+            console.log(this.battlefield);
+            status.isCollision = true;
+            console.error('Collision');
+          }
         }
       });
     });
+
     if (!status.isCollision && !status.isBlocked) {
-      this.removeTetramino(false);
       this.offsetCurrentFigure = { ...newPosition };
       this.addTetramino(true);
     }
     return status;
+  };
+
+  private checkToRotate = (figure: TBattlefieldCells) => {
+    if (!this.currentFigure) {
+      return;
+    }
+    const rotatedFigure = transpose(figure);
+    const offsetCorrector = {
+      x: 0,
+      y: 0,
+    };
+    let isError = false;
+    let needOffsetCurrent = true;
+    let iterations = 0;
+    while (needOffsetCurrent && iterations++ < 50) {
+      console.log(offsetCorrector);
+      isError = false;
+      needOffsetCurrent = false;
+      rotatedFigure.forEach((row, indexRow) => {
+        row.forEach((cell, indexCell) => {
+          if (isError || needOffsetCurrent) {
+            return;
+          }
+          if (cell !== 0) {
+            const cellPos = {
+              x: this.offsetCurrentFigure.x + indexCell + offsetCorrector.x,
+              y: this.offsetCurrentFigure.y + indexRow + offsetCorrector.y,
+            };
+            // eslint-disable-next-line no-debugger
+            // debugger;
+            if (cellPos.x < 0 || cellPos.x >= BATTLEFIELD_ENV.width) {
+              console.error(`[ROTATE]WRONG X ${cellPos.x}`);
+              offsetCorrector.x += cellPos.x < 0 ? 1 : -1;
+              needOffsetCurrent = true;
+            }
+            if (cellPos.y < 0 || cellPos.y >= BATTLEFIELD_ENV.height) {
+              console.error(`[ROTATE]WRONG Y ${cellPos.y}`);
+              isError = true;
+            }
+
+            if (this.battlefield?.[cellPos.y]?.[cellPos.x]) {
+              console.error(
+                `[ROTATE] isCollision on x: ${cellPos.x} y: ${cellPos.y} = ${
+                  this.battlefield?.[cellPos.y]?.[cellPos.x]
+                }`
+              );
+              isError = true;
+            }
+          }
+        });
+      });
+    }
+
+    if (isError) {
+      transpose(figure);
+    }
+
+    this.offsetCurrentFigure.x += offsetCorrector.x;
+
+    console.log('ITERATIONS', iterations);
+
+    return isError;
   };
 
   private removeTetramino = (shouldUpdate = true) => {
@@ -157,11 +215,11 @@ export class TetraminoField {
       return;
     }
     this.removeTetramino(false);
-    this.currentFigure = transpose(this.currentFigure);
+    this.checkToRotate(this.currentFigure);
     this.addTetramino(true);
   };
 
-  public moveTetramino = (move: 'right' | 'left' | 'down') => {
+  public moveTetramino = (move: 'right' | 'left' | 'down' | 'up') => {
     switch (move) {
       case 'left':
         this.checkToMove({ x: -1, y: 0 });
@@ -171,6 +229,9 @@ export class TetraminoField {
         break;
       case 'down':
         this.checkToMove({ x: 0, y: 1 });
+        break;
+      case 'up':
+        this.checkToMove({ x: 0, y: -1 });
         break;
       default:
         break;
@@ -185,11 +246,7 @@ export class TetraminoField {
     this.battlefield = initBattleField();
     const typeFigure: keyof typeof figuresSymbols = 'line';
     this.currentFigure = createTetramino(typeFigure);
-    this.addTetramino();
-    // setInterval(() => {
-    //   this.moveTetramino('down');
-    // }, 500);
-    this.updateComponent();
+    this.addTetramino(true);
   };
 }
 
