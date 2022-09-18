@@ -4,9 +4,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "start:front": "yarn workspace red-tetris-frontend run dev",
-    "build:front": "yarn workspace red-tetris-frontend run build"
+    "build:front": "yarn workspace red-tetris-frontend run build",
+    "eslint:fix": "yarn "
+  },
+  "devDependencies": {
+
   }
 }
