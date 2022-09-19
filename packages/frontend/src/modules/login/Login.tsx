@@ -10,7 +10,7 @@ export const Login: React.FC = () => {
   };
   return (
     <div>
-      <input type="text" onChange={(el) => setName(el.target.value)} />
+      <input type="text" value={name} onChange={(el) => setName(el.target.value)} />
       <p>
         login: {name}, {String(isConnected)}
       </p>

@@ -1,5 +1,6 @@
 import { Server } from './index';
 import { TChatMessage } from './types';
+import Users from './Users';
 
 const chatHistory: TChatMessage[] = [
   {
@@ -20,13 +21,21 @@ const count = (() => {
 })();
 
 class Socket {
-  constructor(private io: Server['io']) {
+  // private users: typeof users;
+  constructor(private io: Server['io'], private users = Users) {
     this.io.on('connection', (socket) => {
-      console.log(socket.id);
+      console.log(socket.handshake.query.name);
+      if (socket.handshake.query.name && users.createUser(socket.id, String(socket.handshake.query.name))) {
+        console.log('userIsCreated');
+      } else {
+        socket.disconnect();
+        console.log('user is exitst');
+      }
+      console.log(socket.handshake.query);
       socket.emit('chatHistory', chatHistory);
       socket.join('chat');
 
-      console.log(socket);
+      // console.log(socket);
 
       socket.on('sendMessage', ({ message }) => {
         const chatMessage = {
