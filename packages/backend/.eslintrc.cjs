@@ -16,6 +16,7 @@ module.exports = {
     plugins: ['react', '@typescript-eslint', 'prettier', 'prefer-arrow'],
     "ignorePatterns": ["dist", "node_modules", "examples", "scripts"],
     rules: {
+        "@typescript-eslint/no-namespace": "off",
         'prettier/prettier': ['error'],
         'react/display-name': 'off',
         'prefer-arrow/prefer-arrow-functions': [

@@ -26,7 +26,8 @@
     "socket.io-client": "4.5.2",
     "typescript": "^4.8.3",
     "vite-plugin-checker": "^0.5.1",
-    "vite-plugin-svgr": "^2.2.1"
+    "vite-plugin-svgr": "^2.2.1",
+    "red-tetris-backend": "*"
   },
   "devDependencies": {
     "@types/react": "^18.0.17",

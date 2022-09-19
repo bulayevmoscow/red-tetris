@@ -2,25 +2,24 @@ import express from 'express';
 import * as socketio from 'socket.io';
 import * as http from 'http';
 import cors from 'cors';
+import { SocketInit } from './Socket';
+import { SocketEvents } from './types';
 
 const app = express();
 app.use(cors());
 
-class Server {
+export class Server {
   constructor(
     public httpServer = http.createServer(app),
-    public io = new socketio.Server(httpServer, {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    public io = new socketio.Server<SocketEvents.ClientToServerEvents, SocketEvents.ServerToClientEvents>(httpServer, {
       cors: {
         origin: '*',
       },
     })
   ) {
-    //  some
-    this.io.on('connection', (socket) => {
-      // ...
-      console.log('connected');
-    });
     this.httpServer.listen(3001);
+    SocketInit(this.io);
   }
 }
 

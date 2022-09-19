@@ -1,35 +1,36 @@
-import React, { FC, ReactElement, useEffect, useState } from 'react';
+import React, { FC, ReactElement, useEffect, useMemo, useState } from 'react';
 import { socket } from './socketIoAdapter';
+import { TChatMessage } from './types';
+
+export const ChatContext = React.createContext<{ chatMessages: TChatMessage[]; sendMessage: (str: string) => void }>({
+  chatMessages: [],
+  sendMessage: (str) => str,
+});
 
 export const SocketChatProvider: FC<{ children: ReactElement }> = ({ children }) => {
-  const [isConnected, setIsConnected] = useState(false);
+  const [chatMessages, setChatMessages] = useState<TChatMessage[]>([]);
 
   useEffect(() => {
-    socket.connect();
-    socket.on('connect', () => {
-      console.log('connect');
-      setIsConnected(true);
+    socket.on('chatHistory', (arg) => {
+      console.log('chatHistory');
+      setChatMessages(arg);
     });
 
-    socket.on('disconnect', () => {
-      setIsConnected(false);
+    socket.on('updateChat', (arg) => {
+      setChatMessages((prevState) => [...prevState, ...arg]);
+      console.log('updateChat');
     });
-    socket.on('pong', () => {
-      // setLastPong(new Date().toISOString());
-    });
-
-    return () => {
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('pong');
-      socket.disconnect();
-    };
   }, []);
 
-  useEffect(() => {
-    console.log('[Socket:Connect]', isConnected);
-    console.log(socket.id);
-  }, [isConnected]);
+  const value = useMemo(
+    () => ({
+      chatMessages,
+      sendMessage: (str: string) => {
+        socket.emit('sendMessage', { message: str });
+      },
+    }),
+    [chatMessages]
+  );
 
-  return <>{children}</>;
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };

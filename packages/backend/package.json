@@ -1,7 +1,6 @@
 {
   "name": "red-tetris-backend",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "commonjs",
   "license": "MIT",
   "scripts": {

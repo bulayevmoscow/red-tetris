@@ -1,0 +1,16 @@
+export type TChatMessage = {
+  date: Date;
+  user: string;
+  message: string;
+};
+
+export namespace SocketEvents {
+  export type ServerToClientEvents = {
+    chatHistory: (arg: TChatMessage[]) => void;
+    newMessages: (arg: TChatMessage) => void;
+    updateChat: (arg: TChatMessage[]) => void;
+  };
+  export type ClientToServerEvents = {
+    sendMessage: (arg: Pick<TChatMessage, 'message'>) => void;
+  };
+}
