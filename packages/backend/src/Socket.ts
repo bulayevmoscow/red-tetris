@@ -1,57 +1,30 @@
 import { Server } from './index';
-import { TChatMessage } from './types';
 import Users from './Users';
-
-const chatHistory: TChatMessage[] = [
-  {
-    date: new Date(),
-    user: 'alex',
-    message: 'kekw',
-  },
-  {
-    date: new Date(),
-    user: 'alex2',
-    message: 'kekw2',
-  },
-];
-
-const count = (() => {
-  let a = 0;
-  return () => a++;
-})();
+import Chat from './Chat';
 
 class Socket {
-  // private users: typeof users;
-  constructor(private io: Server['io'], private users = Users) {
+  constructor(private io: Server['io'], private users = Users, private chat = Chat) {
     this.io.on('connection', (socket) => {
-      console.log(socket.handshake.query.name);
       if (socket.handshake.query.name && users.createUser(socket.id, String(socket.handshake.query.name))) {
         console.log('userIsCreated');
       } else {
         socket.disconnect();
         console.log('user is exitst');
       }
-      console.log(socket.handshake.query);
-      socket.emit('chatHistory', chatHistory);
+      socket.on('disconnect', () => {
+        users.removeUser(socket.id);
+      });
+      socket.emit('chatHistory', this.chat.getHistory());
       socket.join('chat');
 
-      // console.log(socket);
-
       socket.on('sendMessage', ({ message }) => {
-        const chatMessage = {
-          message,
-          user: 'hx',
-          date: new Date(),
-        };
         if (message) {
-          chatHistory.push(chatMessage);
-          io.in('chat').emit('updateChat', [chatMessage]);
+          const user = this.users.getUserData(socket.id);
+          const msg = this.chat.addMessage(user?.name ?? 'someUser', message);
+          io.in('chat').emit('updateChat', [msg]);
         }
       });
     });
-    // setInterval(() => {
-    //   this.io?.to('chat').emit('kekw');
-    // }, 1000);
   }
 }
 

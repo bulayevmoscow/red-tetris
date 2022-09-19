@@ -1,4 +1,5 @@
 export type TChatMessage = {
+  id: number;
   date: Date;
   user: string;
   message: string;

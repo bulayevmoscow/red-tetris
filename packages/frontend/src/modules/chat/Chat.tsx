@@ -21,7 +21,7 @@ export const Chat: React.FC = () => {
         return (
           // @ts-ignore
           <div key={index}>
-            {record.user}[{record.date}]: {record.message}
+            {record.user}[{record.date}]: {record.message}[{record.id}]
           </div>
         );
       })}
