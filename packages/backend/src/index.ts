@@ -1,17 +1,27 @@
-import express, { Express, Request, Response } from 'express';
-import dotenv from 'dotenv';
-import { welcome } from './api/welcome';
+import express from 'express';
+import * as socketio from 'socket.io';
+import * as http from 'http';
+import cors from 'cors';
 
-dotenv.config();
+const app = express();
+app.use(cors());
 
-const app: Express = express();
-const port = process.env.PORT || 3005;
+class Server {
+  constructor(
+    public httpServer = http.createServer(app),
+    public io = new socketio.Server(httpServer, {
+      cors: {
+        origin: '*',
+      },
+    })
+  ) {
+    //  some
+    this.io.on('connection', (socket) => {
+      // ...
+      console.log('connected');
+    });
+    this.httpServer.listen(3001);
+  }
+}
 
-app.get('/', (req: Request, res: Response) => {
-  console.log(welcome);
-  res.send('Express + TypeScript Server');
-});
-
-app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
-});
+const serv = new Server();
