@@ -10,7 +10,6 @@ class UsersClass {
   };
 
   hasUser = (user: TUserData) => {
-    console.log(this.users);
     return (
       [...this.users.entries()].findIndex((value) => {
         return value[1].name === user.name;
