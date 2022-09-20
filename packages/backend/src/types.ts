@@ -1,3 +1,5 @@
+import { TLoggerMessage } from './Logger';
+
 export type TChatMessage = {
   id: number;
   date: Date;
@@ -15,5 +17,6 @@ export namespace SocketEvents {
     sendMessage: (arg: Pick<TChatMessage, 'message'>) => void;
     // test
     getAllUsers: () => any;
+    updateLogs: (arg: TLoggerMessage) => void;
   };
 }

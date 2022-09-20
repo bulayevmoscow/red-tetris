@@ -20,6 +20,7 @@ class Socket {
 
       socket.emit('chatHistory', this.chat.getHistory());
       socket.join('chat');
+      socket.join('logger');
 
       socket.on('sendMessage', ({ message }) => {
         if (message) {

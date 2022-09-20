@@ -1,5 +1,5 @@
 import io, { ManagerOptions, Socket, SocketOptions } from 'socket.io-client';
-import { SocketEvents } from '@/providers/types';
+import { SocketEvents } from './types';
 
 export const socketOptions = {
   autoConnect: false,
