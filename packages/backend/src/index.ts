@@ -7,20 +7,21 @@ import { SocketEvents } from './types';
 
 const app = express();
 app.use(cors());
+const httpServer = http.createServer(app);
 
 export class Server {
-  constructor(
-    public httpServer = http.createServer(app),
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    public io = new socketio.Server<SocketEvents.ClientToServerEvents, SocketEvents.ServerToClientEvents>(httpServer, {
+  static readonly io = new socketio.Server<SocketEvents.ClientToServerEvents, SocketEvents.ServerToClientEvents>(
+    httpServer,
+    {
       cors: {
         origin: '*',
       },
-    })
-  ) {
-    this.httpServer.listen(3001);
-    SocketInit(this.io);
+    }
+  );
+  constructor() {
+    new SocketInit();
   }
 }
 
-const serv = new Server();
+new Server();
+httpServer.listen(3001);

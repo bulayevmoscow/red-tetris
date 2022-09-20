@@ -19,6 +19,7 @@ export const App = () => {
           <ListOfUsers />
           <Login />
           <Chat />
+          <Logger />
         </>
       </SocketChatProvider>
     </SocketConnectProvider>

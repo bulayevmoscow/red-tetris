@@ -2,8 +2,8 @@ import { Server } from './index';
 import Users from './Users';
 import Chat from './Chat';
 
-class Socket {
-  constructor(private io: Server['io'], private users = Users, private chat = Chat) {
+export class SocketInit {
+  constructor(private io = Server.io, private users = Users, private chat = Chat) {
     this.io.on('connection', (socket) => {
       if (socket.handshake.query.name && users.createUser(socket.id, String(socket.handshake.query.name))) {
         console.log('userIsCreated');
@@ -32,7 +32,3 @@ class Socket {
     });
   }
 }
-
-export const SocketInit = (io: Server['io']) => {
-  new Socket(io);
-};
