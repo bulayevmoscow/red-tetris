@@ -28,6 +28,10 @@ class UsersClass {
   removeUser = (socketID: string) => {
     return this.users.delete(socketID);
   };
+
+  getAllUsers = () => {
+    return this.users;
+  };
 }
 
 export default new UsersClass();

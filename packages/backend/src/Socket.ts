@@ -14,6 +14,10 @@ class Socket {
       socket.on('disconnect', () => {
         users.removeUser(socket.id);
       });
+      socket.on('getAllUsers', () => {
+        return '123';
+      });
+
       socket.emit('chatHistory', this.chat.getHistory());
       socket.join('chat');
 

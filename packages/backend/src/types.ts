@@ -13,5 +13,7 @@ export namespace SocketEvents {
   };
   export type ClientToServerEvents = {
     sendMessage: (arg: Pick<TChatMessage, 'message'>) => void;
+    // test
+    getAllUsers: () => any;
   };
 }
