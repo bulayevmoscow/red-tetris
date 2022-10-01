@@ -2,6 +2,20 @@ import { Game } from './Game';
 import { randomUUID as v4 } from 'crypto';
 import { Server } from './index';
 import { IO_ROOMS, TRoomInfo } from './types';
+import Users, { User } from './Users';
+
+const roomsDataParse = (rooms: Map<string, Room>): TRoomInfo[] => {
+  return Array.from(rooms, (value) => {
+    const data = value[1];
+    const res: TRoomInfo = {
+      key: data.roomId,
+      isSingle: data.isSingleGame,
+      users: data.gamers.length,
+      name: data.name,
+    };
+    return res;
+  });
+};
 
 type TRoomUser = {
   score: number;
@@ -12,41 +26,25 @@ type TRoomUser = {
 type TRoomParams = {
   isSingleGame: boolean;
   roomName: string;
-  createdBy: string;
+  createdBy: User;
 };
 
 class Room {
-  private listeners: string[];
   public isSingleGame: boolean;
-  public users: TRoomUser[];
+  private users = new Users();
+  public gamers: User[];
   constructor(params: TRoomParams, public roomId: string, public name: string) {
-    this.listeners = [];
-    this.users = [];
     this.isSingleGame = params.isSingleGame;
+    this.gamers = [];
   }
 
   addUser = (userId: string) => {
-    this.users.push({
-      userId,
-      game: new Game({ updateState: () => undefined }),
-      level: 0,
-      score: 0,
-    });
+    const user = this.users.hasUserByName(userId);
+    if (user) {
+      this.gamers.push(user);
+    }
   };
 }
-
-const roomsDataParse = (rooms: Map<string, Room>): TRoomInfo[] => {
-  return Array.from(rooms, (value) => {
-    const data = value[1];
-    const res: TRoomInfo = {
-      key: data.roomId,
-      isSingle: data.isSingleGame,
-      users: data.users.length,
-      name: data.name,
-    };
-    return res;
-  });
-};
 
 export default class Rooms {
   static rooms: Map<string, Room> = new Map<string, Room>();
@@ -54,7 +52,8 @@ export default class Rooms {
     // this.io.on('createRoom', () => {});
     console.log('rooms init');
     setTimeout(() => {
-      this.addRoom({ roomName: 'kekw', isSingleGame: false, createdBy: 'admin' });
+      // @ts-ignore
+      this.addRoom({ roomName: 'kekw', isSingleGame: false, createdBy: undefined });
       this.updateRoomInfo();
     }, 3000);
 
@@ -89,6 +88,14 @@ export default class Rooms {
     Rooms.rooms.set(roomId, game);
     this.updateRoomInfo();
     return roomId;
+  };
+
+  joinToRoom = (User: User, RoomId: string) => {
+    const room = Rooms.rooms.get(RoomId);
+
+    // if (room) => {
+    //   io.to
+    // }
   };
 
   removeRoom = () => {

@@ -1,31 +1,38 @@
 import { LoggerClass } from './Logger';
 
-type TUserData = {
-  name: string;
-};
+export class User {
+  public socketId: string;
+  public name: string;
+  constructor({ name, socketId }: { name: string; socketId: string }) {
+    this.name = name;
+    this.socketId = socketId;
+  }
+}
 
-class UsersClass {
-  constructor(private users = new Map<string, { name: string }>(), private logger = new LoggerClass()) {}
+export default class Users {
+  public static users = new Map<string, User>();
+  constructor(private logger = new LoggerClass()) {}
 
-  getUserData = (socketID: string): TUserData | undefined => {
-    return this.users.get(socketID);
+  getUserData = (socketID: string) => {
+    return Users.users.get(socketID);
   };
 
-  hasUser = (user: TUserData) => {
-    return (
-      [...this.users.entries()].findIndex((value) => {
-        return value[1].name === user.name;
-      }) !== -1
-    );
+  hasUserByName = (name: string): User | undefined => {
+    const listOfUsers = Array.from(Users.users.entries());
+    const res = listOfUsers.find((value) => {
+      return value[1].name === name;
+    });
+
+    return res?.[1];
   };
 
   createUser = (socketID: string, name: string) => {
-    if (this.hasUser({ name })) {
+    if (this.hasUserByName(name)) {
       this.logger.setMessage({ header: 'createUser[error]', params: { socketID, name } });
       return null;
     }
     this.logger.setMessage({ header: 'createUser[created!]', params: { socketID, name } });
-    return this.users.set(socketID, { name });
+    return Users.users.set(socketID, new User({ socketId: socketID, name }));
   };
 
   removeUser = (socketID: string) => {
@@ -33,12 +40,10 @@ class UsersClass {
       header: 'removeUser[removed]',
       params: { socketID, name: this.getUserData(socketID)?.name },
     });
-    return this.users.delete(socketID);
+    return Users.users.delete(socketID);
   };
 
   getAllUsers = () => {
-    return this.users;
+    return Users.users;
   };
 }
-
-export default new UsersClass();

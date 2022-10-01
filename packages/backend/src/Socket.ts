@@ -5,7 +5,7 @@ import Rooms from './Room';
 import { IO_ROOMS } from './types';
 
 export class SocketInit {
-  constructor(private io = Server.io, private users = Users, private chat = Chat, private rooms = new Rooms()) {
+  constructor(private io = Server.io, private users = new Users(), private chat = Chat, private rooms = new Rooms()) {
     this.io.on('connection', (socket) => {
       if (socket.handshake.query.name && users.createUser(socket.id, String(socket.handshake.query.name))) {
         console.log('userIsCreated');
@@ -22,19 +22,18 @@ export class SocketInit {
       socket.on('getAllUsers', () => {
         return '123';
       });
-      socket.on('createRoom', ({ roomName, isSingleGame }, callback) => {
+      socket.on('createRoom', ({ roomName, isSingleGame }, cb) => {
         const user = this.users.getUserData(socket.id);
         let roomId = '';
         console.log(user);
         if (user && user?.name) {
           roomId = this.rooms.addRoom({
             roomName,
-            createdBy: user.name,
+            createdBy: user,
             isSingleGame,
           });
         }
-
-        callback({ roomId, isSuccess: true });
+        cb({ roomId, isSuccess: roomId !== '' });
       });
 
       socket.emit('chatHistory', this.chat.getHistory());
