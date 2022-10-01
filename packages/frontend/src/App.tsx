@@ -6,6 +6,7 @@ import { Chat } from '@/modules/chat/Chat';
 import { SocketConnectProvider } from '@/providers/SocketConnectProvider';
 import { Login } from '@/modules/login/Login';
 import { ListOfUsers } from '@/modules/ListOfUsers';
+import { ListOfRooms } from '@/modules/ListOfRooms';
 
 export const App = () => {
   const [count, setCount] = useState(0);
@@ -16,6 +17,7 @@ export const App = () => {
     <SocketConnectProvider>
       <SocketChatProvider>
         <>
+          <ListOfRooms />
           <ListOfUsers />
           <Login />
           <Chat />

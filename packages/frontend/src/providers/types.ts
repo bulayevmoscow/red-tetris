@@ -1,1 +1,9 @@
-export type { SocketEvents, TChatMessage } from 'red-tetris-backend/src/types';
+export type {
+  SocketEvents,
+  TChatMessage,
+  IO_ROOMS,
+  TRoomInfo,
+  TLoggerMessage,
+  TGameField,
+  TGameActionKeys,
+} from 'red-tetris-backend/src/types';

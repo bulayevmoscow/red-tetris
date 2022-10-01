@@ -12,7 +12,6 @@ export const Chat: React.FC = () => {
       sendMessage(msg);
     }
   };
-  console.log(chatMessages);
   return (
     <div>
       messages:

@@ -18,6 +18,8 @@ export class Server {
       },
     }
   );
+  static room = require('./Room');
+
   constructor() {
     new SocketInit();
   }
