@@ -1,4 +1,4 @@
-import { Server } from './index';
+import Server from './index';
 import Users from './Users';
 import Chat from './Chat';
 import Rooms from './Room';
@@ -34,6 +34,18 @@ export class SocketInit {
           });
         }
         cb({ roomId, isSuccess: roomId !== '' });
+      });
+
+      socket.on('joinToRoom', ({ roomId }, cb) => {
+        const res = this.rooms.joinToRoom({ socket, roomId });
+        cb({ isSuccess: !!res });
+      });
+
+      socket.on('leaveFromRoom', ({ roomId }) => {
+        this.rooms.removeFromRoomByIds({
+          roomId,
+          socketId: socket.id,
+        });
       });
 
       socket.emit('chatHistory', this.chat.getHistory());

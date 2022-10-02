@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { Logger } from '@/modules/logger';
 import { SocketChatProvider } from '@/providers/SocketChatProvider';
@@ -9,19 +9,23 @@ import { ListOfUsers } from '@/modules/ListOfUsers';
 import { ListOfRooms } from '@/modules/ListOfRooms';
 
 export const App = () => {
-  const [count, setCount] = useState(0);
-
-  // useEffect(() => {}, []);
-
+  const [logger, setLogger] = useState(false);
   return (
     <SocketConnectProvider>
       <SocketChatProvider>
         <>
-          <ListOfRooms />
-          <ListOfUsers />
-          <Login />
-          <Chat />
-          <Logger />
+          {!logger && (
+            <div id="app">
+              <ListOfRooms />
+              <ListOfUsers />
+              <Login />
+              <Chat />
+            </div>
+          )}
+          <div id="logger">
+            <button onClick={() => setLogger((prevState) => !prevState)}>Switch to only logs</button>
+            <Logger />
+          </div>
         </>
       </SocketChatProvider>
     </SocketConnectProvider>

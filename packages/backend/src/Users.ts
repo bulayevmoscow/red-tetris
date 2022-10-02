@@ -1,4 +1,4 @@
-import { LoggerClass } from './Logger';
+import { Logger } from './Logger';
 
 export class User {
   public socketId: string;
@@ -11,7 +11,7 @@ export class User {
 
 export default class Users {
   public static users = new Map<string, User>();
-  constructor(private logger = new LoggerClass()) {}
+  constructor(private logger = new Logger()) {}
 
   getUserData = (socketID: string) => {
     return Users.users.get(socketID);

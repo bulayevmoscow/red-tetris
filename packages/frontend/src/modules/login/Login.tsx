@@ -1,9 +1,13 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useLocalStorage } from '@/utils/useLocalStorage';
 import { SocketConnectContext } from '@/providers/SocketConnectProvider';
 
+const paramsString = window.location.search;
+const searchParams = new URLSearchParams(paramsString);
+
 export const Login: React.FC = () => {
-  const [name, setName] = useLocalStorage('user');
+  // const [name, setName] = useLocalStorage('user');
+  const [name, setName] = useState(searchParams.get('user') ?? '');
   const { connect, isConnected, disconnect } = useContext(SocketConnectContext);
   const onLogin = () => {
     connect(name);

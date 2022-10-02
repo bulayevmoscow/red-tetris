@@ -1,8 +1,9 @@
 import { Game } from './Game';
 import { randomUUID as v4 } from 'crypto';
-import { Server } from './index';
-import { IO_ROOMS, TRoomInfo } from './types';
+import Server from './index';
+import { IO_ROOMS, SocketInstance, TRoomInfo } from './types';
 import Users, { User } from './Users';
+import { Logger } from './Logger';
 
 const roomsDataParse = (rooms: Map<string, Room>): TRoomInfo[] => {
   return Array.from(rooms, (value) => {
@@ -10,7 +11,7 @@ const roomsDataParse = (rooms: Map<string, Room>): TRoomInfo[] => {
     const res: TRoomInfo = {
       key: data.roomId,
       isSingle: data.isSingleGame,
-      users: data.gamers.length,
+      users: JSON.stringify(data.gamers),
       name: data.name,
     };
     return res;
@@ -20,7 +21,6 @@ const roomsDataParse = (rooms: Map<string, Room>): TRoomInfo[] => {
 type TRoomUser = {
   score: number;
   level: number;
-  game: Game;
   userId: string;
 };
 type TRoomParams = {
@@ -29,26 +29,42 @@ type TRoomParams = {
   createdBy: User;
 };
 
-class Room {
+export class Room {
   public isSingleGame: boolean;
+  public gamers: User[] = [];
   private users = new Users();
-  public gamers: User[];
+  private game: Game;
   constructor(params: TRoomParams, public roomId: string, public name: string) {
     this.isSingleGame = params.isSingleGame;
-    this.gamers = [];
+    this.game = new Game(roomId);
   }
 
-  addUser = (userId: string) => {
-    const user = this.users.hasUserByName(userId);
-    if (user) {
-      this.gamers.push(user);
+  addUser = (user: User) => {
+    this.gamers.push(user);
+  };
+
+  removeUser = (userToRemove: User) => {
+    const findUserIndex = this.gamers.findIndex((user) => {
+      return user === userToRemove;
+    });
+    if (findUserIndex === -1) {
+      return false;
+    } else {
+      this.gamers.splice(findUserIndex, 1);
+      return true;
+    }
+  };
+
+  updateStatusUsers = () => {
+    if (this.gamers.length === 0) {
+      this.game.stopGame();
     }
   };
 }
 
 export default class Rooms {
   static rooms: Map<string, Room> = new Map<string, Room>();
-  constructor(private io = Server.io) {
+  constructor(private io = Server.io, private logger = new Logger(), private users = new Users()) {
     // this.io.on('createRoom', () => {});
     console.log('rooms init');
     setTimeout(() => {
@@ -90,15 +106,53 @@ export default class Rooms {
     return roomId;
   };
 
-  joinToRoom = (User: User, RoomId: string) => {
-    const room = Rooms.rooms.get(RoomId);
-
-    // if (room) => {
-    //   io.to
-    // }
+  joinToRoom = ({ socket, roomId }: { socket: SocketInstance; roomId: string }) => {
+    const room = Rooms.rooms.get(roomId);
+    const user = Users.users.get(socket.id);
+    if (!user) {
+      this.logger.setMessage({ header: 'user not found', params: { id: socket.id } });
+      return;
+    }
+    if (room) {
+      this.logger.setMessage({ header: 'user joined to room', params: { roomId: room.roomId } });
+      room.addUser(user);
+      socket.join(room.roomId);
+      socket.on('disconnect', () => {
+        this.logger.setMessage({ header: 'user removed from room', params: { roomId: room.roomId } });
+        this.removeFromRoom({ user, room });
+      });
+      return room;
+    } else {
+      this.logger.setMessage({ header: 'room not found', params: { roomId } });
+    }
   };
 
-  removeRoom = () => {
-    // createRoom
+  private removeFromRoom = ({ user, room }: { user: User; room: Room }) => {
+    const isRemoved = room.removeUser(user);
+    if (isRemoved) {
+      this.logger.setMessage({
+        header: '[removeFromRoom] User removed from room',
+        params: { room: room.roomId, user: user.name },
+      });
+    } else {
+      this.logger.setMessage({
+        header: '[removeFromRoom] User not removed from room',
+        params: { room: room.roomId, user: user.name },
+      });
+    }
+  };
+
+  public removeFromRoomByIds = ({ socketId, roomId }: { socketId: string; roomId: string }) => {
+    const user = this.users.getUserData(socketId);
+    const room = Rooms.rooms.get(roomId);
+    if (!user) {
+      this.logger.setMessage({ header: '[removeFromRoomByIds] User not found', params: { user } });
+      return;
+    }
+    if (!room) {
+      this.logger.setMessage({ header: '[removeFromRoomByIds] Room not found', params: { room } });
+      return;
+    }
+    this.removeFromRoom({ user, room });
   };
 }

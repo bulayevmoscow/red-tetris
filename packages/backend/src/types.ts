@@ -1,3 +1,6 @@
+import { Socket } from 'socket.io';
+import { DefaultEventsMap } from 'socket.io/dist/typed-events';
+
 export type TChatMessage = {
   id: number;
   date: Date;
@@ -22,9 +25,16 @@ export const IO_ROOMS = {
 export type TRoomInfo = {
   key: string;
   isSingle: boolean;
-  users: number;
+  users: string;
   name: string;
 };
+
+export type SocketInstance = Socket<
+  SocketEvents.ClientToServerEvents,
+  SocketEvents.ServerToClientEvents,
+  DefaultEventsMap,
+  any
+>;
 
 export namespace SocketEvents {
   export type ServerToClientEvents = {
@@ -39,6 +49,8 @@ export namespace SocketEvents {
   export type ClientToServerEvents = {
     sendMessage: (arg: Pick<TChatMessage, 'message'>) => void;
     createRoom: EventWithKnowledge<{ isSuccess: boolean; roomId: string }, { roomName: string; isSingleGame: boolean }>;
+    joinToRoom: EventWithKnowledge<{ isSuccess: boolean }, { roomId: string }>;
+    leaveFromRoom: EventWithKnowledge<undefined, { roomId: string }>;
     // test
     getAllUsers: () => any;
     gameAction: (arg: TGameActionKeys) => void;

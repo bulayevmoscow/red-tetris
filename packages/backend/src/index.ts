@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 const httpServer = http.createServer(app);
 
-export class Server {
+export default class Server {
   static readonly io = new socketio.Server<SocketEvents.ClientToServerEvents, SocketEvents.ServerToClientEvents>(
     httpServer,
     {
@@ -18,7 +18,8 @@ export class Server {
       },
     }
   );
-  static room = require('./Room');
+  static Room = require('./Room');
+  static Users = require('./Users');
 
   constructor() {
     new SocketInit();
