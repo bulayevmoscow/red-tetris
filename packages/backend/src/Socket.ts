@@ -17,13 +17,13 @@ export class SocketInit {
         console.log('user is exitst');
       }
       socket.on('disconnect', () => {
-        users.removeUser(socket.id);
+        users.removeUser({ socketId: socket.id });
       });
       socket.on('getAllUsers', () => {
         return '123';
       });
       socket.on('createRoom', ({ roomName, isSingleGame }, cb) => {
-        const user = this.users.getUserData(socket.id);
+        const user = this.users.getUserBySocketId(socket.id);
         let roomId = '';
         console.log(user);
         if (user && user?.name) {
@@ -61,7 +61,7 @@ export class SocketInit {
 
       socket.on('sendMessage', ({ message }) => {
         if (message) {
-          const user = this.users.getUserData(socket.id);
+          const user = this.users.getUserBySocketId(socket.id);
           const msg = this.chat.addMessage(user?.name ?? 'someUser', message);
           io.in('chat').emit('updateChat', [msg]);
         }

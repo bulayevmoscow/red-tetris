@@ -149,7 +149,7 @@ export default class Rooms {
   };
   // Удаление игрока по socketId
   removeFromRoomByIds = ({ socketId, roomId }: { socketId: string; roomId: string }) => {
-    const user = this.users.getUserData(socketId);
+    const user = this.users.getUserBySocketId(socketId);
     const room = Rooms.rooms.get(roomId);
     if (!user) {
       this.logger.setMessage({ header: '[removeFromRoomByIds] User not found', params: { user } });
