@@ -51,6 +51,8 @@ export namespace SocketEvents {
     createRoom: EventWithKnowledge<{ isSuccess: boolean; roomId: string }, { roomName: string; isSingleGame: boolean }>;
     joinToRoom: EventWithKnowledge<{ isSuccess: boolean }, { roomId: string }>;
     leaveFromRoom: EventWithKnowledge<undefined, { roomId: string }>;
+    joinToRoomAsSpectator: EventWithKnowledge<string | undefined, { roomId: string }>;
+    leaveToRoomAsSpectator: EventWithKnowledge<boolean, { roomId: string }>;
     // test
     getAllUsers: () => any;
     gameAction: (arg: TGameActionKeys) => void;

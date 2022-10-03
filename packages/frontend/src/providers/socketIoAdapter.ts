@@ -1,7 +1,7 @@
 import io, { ManagerOptions, Socket, SocketOptions } from 'socket.io-client';
 import { SocketEvents } from './types';
 
-export const socketOptions = {
+export const socketOptions: Partial<ManagerOptions & SocketOptions> = {
   autoConnect: false,
   query: {
     name: 'kekw',

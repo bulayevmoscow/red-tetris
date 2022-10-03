@@ -16,6 +16,19 @@ export const useListOfRooms = () => {
       console.log(`removed`);
     });
   };
+
+  const joinToRoomAsSpectator = (roomId: string) => {
+    socket.emit('joinToRoomAsSpectator', { roomId }, () => {
+      console.log(`removed`);
+    });
+  };
+
+  const leaveToRoomAsSpectator = (roomId: string) => {
+    socket.emit('leaveToRoomAsSpectator', { roomId }, () => {
+      console.log(`removed`);
+    });
+  };
+
   useEffect(() => {
     socket.on('updateRoomList', (args) => {
       setListOfRooms(args);
@@ -23,5 +36,5 @@ export const useListOfRooms = () => {
     });
   }, []);
 
-  return { listOfRooms, joinToRoom, removeFromRoom };
+  return { listOfRooms, joinToRoom, removeFromRoom, joinToRoomAsSpectator, leaveToRoomAsSpectator };
 };

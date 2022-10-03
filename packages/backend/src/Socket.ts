@@ -48,6 +48,13 @@ export class SocketInit {
         });
       });
 
+      socket.on('joinToRoomAsSpectator', ({ roomId }, callback) => {
+        callback(this.rooms.addSpectator(socket, roomId));
+      });
+      socket.on('leaveToRoomAsSpectator', ({ roomId }, callback) => {
+        callback(this.rooms.removeSpectator(socket, roomId));
+      });
+
       socket.emit('chatHistory', this.chat.getHistory());
       socket.join('chat');
       socket.join('logger');

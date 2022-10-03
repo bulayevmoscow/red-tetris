@@ -29,6 +29,10 @@ type TRoomParams = {
   createdBy: User;
 };
 
+abstract class GameRoom {
+  protected constructor(protected spectators: string) {}
+}
+
 export class Room {
   public isSingleGame: boolean;
   public gamers: User[] = [];
@@ -63,11 +67,12 @@ export class Room {
 }
 
 export default class Rooms {
-  static rooms: Map<string, Room> = new Map<string, Room>();
+  static readonly rooms: Map<string, Room> = new Map<string, Room>();
   constructor(private io = Server.io, private logger = new Logger(), private users = new Users()) {
     // this.io.on('createRoom', () => {});
     console.log('rooms init');
     setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       this.addRoom({ roomName: 'kekw', isSingleGame: false, createdBy: undefined });
       this.updateRoomInfo();
@@ -106,6 +111,7 @@ export default class Rooms {
     return roomId;
   };
 
+  // Вход игрока в комнату
   joinToRoom = ({ socket, roomId }: { socket: SocketInstance; roomId: string }) => {
     const room = Rooms.rooms.get(roomId);
     const user = Users.users.get(socket.id);
@@ -126,7 +132,7 @@ export default class Rooms {
       this.logger.setMessage({ header: 'room not found', params: { roomId } });
     }
   };
-
+  // Удаление игрока из списков по ссылкам
   private removeFromRoom = ({ user, room }: { user: User; room: Room }) => {
     const isRemoved = room.removeUser(user);
     if (isRemoved) {
@@ -141,8 +147,8 @@ export default class Rooms {
       });
     }
   };
-
-  public removeFromRoomByIds = ({ socketId, roomId }: { socketId: string; roomId: string }) => {
+  // Удаление игрока по socketId
+  removeFromRoomByIds = ({ socketId, roomId }: { socketId: string; roomId: string }) => {
     const user = this.users.getUserData(socketId);
     const room = Rooms.rooms.get(roomId);
     if (!user) {
@@ -154,5 +160,28 @@ export default class Rooms {
       return;
     }
     this.removeFromRoom({ user, room });
+  };
+  // Добавление пользователя в обзорщики
+  addSpectator = (socket: SocketInstance, roomId: string) => {
+    const room = Rooms.rooms.get(roomId);
+    if (room) {
+      socket.join(room.roomId);
+      this.logger.setMessage({ header: `User ${socket.id} join to ${room.roomId}` });
+      socket.on('disconnect', () => {
+        this.logger.setMessage({ header: `User ${socket.id} disconnected from ${room.roomId}` });
+        socket.leave(room.roomId);
+      });
+      return roomId;
+    }
+    return undefined;
+  };
+  removeSpectator = (socket: SocketInstance, roomId: string) => {
+    const room = Rooms.rooms.get(roomId);
+    if (room) {
+      this.logger.setMessage({ header: `User ${socket.id} disconnected from ${room.roomId}` });
+      socket.leave(room.roomId);
+      return true;
+    }
+    return false;
   };
 }

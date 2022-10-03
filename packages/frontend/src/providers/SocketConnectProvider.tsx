@@ -35,7 +35,10 @@ export const SocketConnectProvider: FC<{ children: ReactElement }> = ({ children
 
   const value = useMemo(() => {
     const connect = (userName: string) => {
-      socketOptions.query.name = userName;
+      if (socketOptions?.query?.name) {
+        socketOptions.query.name = userName;
+      }
+
       socket.connect();
     };
     return {
