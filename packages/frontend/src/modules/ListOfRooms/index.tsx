@@ -3,7 +3,7 @@ import React, { FC, useRef } from 'react';
 import { useListOfRooms } from '@/modules/ListOfRooms/useListOfRooms';
 import { socket } from '@/providers/socketIoAdapter';
 export const ListOfRooms: FC = () => {
-  const { listOfRooms, joinToRoom, removeFromRoom, joinToRoomAsSpectator, leaveToRoomAsSpectator } = useListOfRooms();
+  const { listOfRooms, addGamerToRoom, leaveGamerFromRoom } = useListOfRooms();
   const roomNameRef = useRef<HTMLInputElement>(null);
   return (
     <div style={{ border: '1px solid red' }}>
@@ -16,13 +16,13 @@ export const ListOfRooms: FC = () => {
               <p>name: {room.name}</p>
               <p>users: {room.users}</p>
               <div>
-                <button onClick={() => joinToRoom(room.key)}>join to room</button>
-                <button onClick={() => removeFromRoom(room.key)}>remove from room</button>
+                <button onClick={() => addGamerToRoom(room.key)}>join gamer to room</button>
+                <button onClick={() => leaveGamerFromRoom(room.key)}>remove gamer from room</button>
               </div>
-              <div>
+              {/* <div>
                 <button onClick={() => joinToRoomAsSpectator(room.key)}>add spectator</button>
                 <button onClick={() => leaveToRoomAsSpectator(room.key)}>remove spectator</button>
-              </div>
+              </div> */}
             </div>
           );
         })}

@@ -49,10 +49,13 @@ export namespace SocketEvents {
   export type ClientToServerEvents = {
     sendMessage: (arg: Pick<TChatMessage, 'message'>) => void;
     createRoom: EventWithKnowledge<{ isSuccess: boolean; roomId: string }, { roomName: string; isSingleGame: boolean }>;
-    joinToRoom: EventWithKnowledge<{ isSuccess: boolean }, { roomId: string }>;
-    leaveFromRoom: EventWithKnowledge<undefined, { roomId: string }>;
-    joinToRoomAsSpectator: EventWithKnowledge<string | undefined, { roomId: string }>;
-    leaveToRoomAsSpectator: EventWithKnowledge<boolean, { roomId: string }>;
+    // Room
+    addGamerToRoom: EventWithKnowledge<{ isSuccess: boolean }, { roomId: string }>;
+    leaveGamerFromRoom: EventWithKnowledge<undefined, { roomId: string }>;
+    addSpectators: EventWithKnowledge<string | undefined, { roomId: string }>;
+    leaveSpectatorFromRoom: EventWithKnowledge<boolean, { roomId: string }>;
+    //
+
     // test
     getAllUsers: () => any;
     gameAction: (arg: TGameActionKeys) => void;

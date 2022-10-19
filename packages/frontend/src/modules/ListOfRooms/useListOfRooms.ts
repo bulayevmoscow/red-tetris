@@ -6,28 +6,29 @@ import { TRoomInfo } from '@/providers/types';
 export const useListOfRooms = () => {
   const { isConnected } = useContext(SocketConnectContext);
   const [listOfRooms, setListOfRooms] = useState<TRoomInfo[]>([]);
-  const joinToRoom = (roomId: string) => {
-    socket.emit('joinToRoom', { roomId }, ({ isSuccess }) => {
+  
+  const addGamerToRoom = (roomId: string) => {
+    socket.emit('addGamerToRoom', { roomId }, ({ isSuccess }) => {
       console.log(`joinToRoom ${roomId} is ${isSuccess}`);
     });
   };
-  const removeFromRoom = (roomId: string) => {
-    socket.emit('leaveFromRoom', { roomId }, () => {
+  const leaveGamerFromRoom = (roomId: string) => {
+    socket.emit('leaveGamerFromRoom', { roomId }, () => {
       console.log(`removed`);
     });
   };
 
-  const joinToRoomAsSpectator = (roomId: string) => {
-    socket.emit('joinToRoomAsSpectator', { roomId }, () => {
-      console.log(`removed`);
-    });
-  };
+  // const joinToRoomAsSpectator = (roomId: string) => {
+  //   socket.emit('joinToRoomAsSpectator', { roomId }, () => {
+  //     console.log(`removed`);
+  //   });
+  // };
 
-  const leaveToRoomAsSpectator = (roomId: string) => {
-    socket.emit('leaveToRoomAsSpectator', { roomId }, () => {
-      console.log(`removed`);
-    });
-  };
+  // const leaveToRoomAsSpectator = (roomId: string) => {
+  //   socket.emit('leaveToRoomAsSpectator', { roomId }, () => {
+  //     console.log(`removed`);
+  //   });
+  // };
 
   useEffect(() => {
     socket.on('updateRoomList', (args) => {
@@ -36,5 +37,7 @@ export const useListOfRooms = () => {
     });
   }, []);
 
-  return { listOfRooms, joinToRoom, removeFromRoom, joinToRoomAsSpectator, leaveToRoomAsSpectator };
+  return { listOfRooms, addGamerToRoom, leaveGamerFromRoom,
+    //  joinToRoomAsSpectator, leaveToRoomAsSpectator 
+    };
 };

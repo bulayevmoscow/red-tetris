@@ -4,6 +4,13 @@ import Server from './index';
 import { IO_ROOMS, SocketInstance, TRoomInfo } from './types';
 import Users, { User } from './Users';
 import { Logger } from './Logger';
+import { EventEmitter } from 'events';
+import { EmitterFactory } from './utils/EmitterFactory';
+import { socket } from 'red-tetris-frontend/src/providers/socketIoAdapter';
+
+type RoomEvents = {
+  hello: 'listener';
+};
 
 const roomsDataParse = (rooms: Map<string, Room>): TRoomInfo[] => {
   return Array.from(rooms, (value) => {
@@ -29,72 +36,119 @@ type TRoomParams = {
   createdBy: User;
 };
 
-abstract class GameRoom {
-  protected constructor(protected spectators: string) {}
-}
+export class Room extends EmitterFactory<{ roomListUpdate: User[] }> {
+  readonly isSingleGame: boolean;
+  readonly gamers: User[] = [];
+  readonly spectators: User[] = [];
+  readonly game: Game;
+  readonly logger = new Logger();
 
-export class Room {
-  public isSingleGame: boolean;
-  public gamers: User[] = [];
-  private users = new Users();
-  private game: Game;
   constructor(params: TRoomParams, public roomId: string, public name: string) {
+    super();
     this.isSingleGame = params.isSingleGame;
     this.game = new Game(roomId);
   }
 
-  addUser = (user: User) => {
-    this.gamers.push(user);
+  updateGamersList = () => {
+    this.emit('roomListUpdate', this.gamers);
   };
 
-  removeUser = (userToRemove: User) => {
-    const findUserIndex = this.gamers.findIndex((user) => {
-      return user === userToRemove;
-    });
-    if (findUserIndex === -1) {
-      return false;
+  addGamer = (user: User): boolean => {
+    // Для одиночной игры
+    if (this.isSingleGame) {
+      if (this.gamers.length >= 1) {
+        this.logger.setMessage({ header: '[Room] AddGamer in single game was end with error, too many users ' });
+        return false;
+      } else {
+        this.logger.setMessage({
+          header: '[Room] AddGamer in single game was end with success',
+          params: { user: user.name },
+        });
+        this.gamers.push(user);
+      }
+      //  Для многопользовательской игры
     } else {
-      this.gamers.splice(findUserIndex, 1);
+      if (this.gamers.length >= 2) {
+        this.logger.setMessage({ header: '[Room] AddGamer in multiplayer game was end with error, too many users ' });
+        return false;
+      } else {
+        this.logger.setMessage({
+          header: '[Room] AddGamer in multiplayer game was end with success',
+          params: { user: user.name },
+        });
+        this.gamers.push(user);
+      }
+    }
+    this.updateGamersList();
+    return true;
+  };
+
+  addSpectators = (user: User) => {
+    this.logger.setMessage({
+      header: '[Room] AddGamer add Spectator',
+      params: { user: user.name },
+    });
+    this.spectators.push(user);
+  };
+
+  removeGamer = (user: User) => {
+    const userIndex = this.gamers.indexOf(user);
+    if (userIndex !== -1) {
+      this.logger.setMessage({
+        header: '[Room] remove gamer success',
+        params: { user: user.name },
+      });
+      this.gamers.splice(userIndex, 1);
+      this.updateGamersList();
       return true;
+    } else {
+      this.logger.setMessage({
+        header: '[Room] remove gamer error',
+        params: { user: user.name },
+      });
+      return false;
     }
   };
 
-  updateStatusUsers = () => {
-    if (this.gamers.length === 0) {
-      this.game.stopGame();
+  removeSpectators = (user: User) => {
+    const userIndex = this.spectators.indexOf(user);
+    if (userIndex !== -1) {
+      this.logger.setMessage({
+        header: '[Room] remove spectator success',
+        params: { user: user.name },
+      });
+      this.spectators.splice(userIndex, 1);
+      return true;
+    } else {
+      this.logger.setMessage({
+        header: '[Room] remove spectator error',
+        params: { user: user.name },
+      });
+      return false;
     }
   };
 }
 
-export default class Rooms {
+export default class Rooms extends EmitterFactory<{ roomsListUpdate: TRoomInfo[] }> {
   static readonly rooms: Map<string, Room> = new Map<string, Room>();
-  constructor(private io = Server.io, private logger = new Logger(), private users = new Users()) {
-    // this.io.on('createRoom', () => {});
-    console.log('rooms init');
-    setTimeout(() => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      this.addRoom({ roomName: 'kekw', isSingleGame: false, createdBy: undefined });
-      this.updateRoomInfo();
-    }, 3000);
-
-    setInterval(() => {
-      // const rooms = io.adapter.rooms;
-      // const rooms = io.of('/').adapter.rooms;
-      // console.log(rooms);
-    }, 5000);
+  constructor(private logger = new Logger(), private users = new Users()) {
+    super();
+    console.log('roomsInit');
   }
 
-  addListener = (toSocketId: string) => {
-    const roomsList = roomsDataParse(Rooms.rooms);
-    // setTimeout(() => {
-    this.io.of('/').to(toSocketId).emit('updateRoomList', roomsList);
-    // }, 100);
+  // addListener = (toSocketId: string) => {
+  //   const roomsList = roomsDataParse(Rooms.rooms);
+  //   // setTimeout(() => {
+  //   this.io.of('/').to(toSocketId).emit('updateRoomList', roomsList);
+  //   // }, 100);
+  // };
+
+  getRooms = (): TRoomInfo[] => {
+    return roomsDataParse(Rooms.rooms);
   };
 
   updateRoomInfo = () => {
-    const roomsList = roomsDataParse(Rooms.rooms);
-    this.io.in(IO_ROOMS.ROOMS).emit('updateRoomList', roomsList);
+    this.emit('roomsListUpdate', this.getRooms());
   };
 
   addRoom = (params: TRoomParams) => {
@@ -107,34 +161,32 @@ export default class Rooms {
       'some name'
     );
     Rooms.rooms.set(roomId, game);
+    game.on('roomListUpdate', (User) => {
+      console.log('Event');
+    });
     this.updateRoomInfo();
     return roomId;
   };
 
   // Вход игрока в комнату
-  joinToRoom = ({ socket, roomId }: { socket: SocketInstance; roomId: string }) => {
+  addGamerToRoom = ({ socketId, roomId }: { socketId: string; roomId: string }) => {
     const room = Rooms.rooms.get(roomId);
-    const user = Users.users.get(socket.id);
+    const user = this.users.getUserBySocketId(socketId);
     if (!user) {
-      this.logger.setMessage({ header: 'user not found', params: { id: socket.id } });
+      this.logger.setMessage({ header: 'user not found', params: { socketId } });
       return;
     }
     if (room) {
       this.logger.setMessage({ header: 'user joined to room', params: { roomId: room.roomId } });
-      room.addUser(user);
-      socket.join(room.roomId);
-      socket.on('disconnect', () => {
-        this.logger.setMessage({ header: 'user removed from room', params: { roomId: room.roomId } });
-        this.removeFromRoom({ user, room });
-      });
+      room.addGamer(user);
       return room;
     } else {
       this.logger.setMessage({ header: 'room not found', params: { roomId } });
     }
   };
   // Удаление игрока из списков по ссылкам
-  private removeFromRoom = ({ user, room }: { user: User; room: Room }) => {
-    const isRemoved = room.removeUser(user);
+  private removeGamerFromRoom = ({ user, room }: { user: User; room: Room }) => {
+    const isRemoved = room.removeGamer(user);
     if (isRemoved) {
       this.logger.setMessage({
         header: '[removeFromRoom] User removed from room',
@@ -148,7 +200,7 @@ export default class Rooms {
     }
   };
   // Удаление игрока по socketId
-  removeFromRoomByIds = ({ socketId, roomId }: { socketId: string; roomId: string }) => {
+  removeGamerFromRoomById = ({ socketId, roomId }: { socketId: string; roomId: string }) => {
     const user = this.users.getUserBySocketId(socketId);
     const room = Rooms.rooms.get(roomId);
     if (!user) {
@@ -159,7 +211,7 @@ export default class Rooms {
       this.logger.setMessage({ header: '[removeFromRoomByIds] Room not found', params: { room } });
       return;
     }
-    this.removeFromRoom({ user, room });
+    this.removeGamerFromRoom({ user, room });
   };
   // Добавление пользователя в обзорщики
   addSpectator = (socket: SocketInstance, roomId: string) => {

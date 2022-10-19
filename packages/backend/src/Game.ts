@@ -12,7 +12,7 @@ export class Game {
   private gameInterval: NodeJS.Timer | undefined;
   constructor(private roomId: string, private io = Server.io) {
     setTimeout(() => {
-      this.startGame();
+      // this.startGame();
     }, 1000);
   }
 

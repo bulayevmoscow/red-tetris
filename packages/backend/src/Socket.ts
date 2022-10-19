@@ -6,12 +6,19 @@ import { IO_ROOMS } from './types';
 
 export class SocketInit {
   constructor(private io = Server.io, private users = new Users(), private chat = Chat, private rooms = new Rooms()) {
+    this.rooms.on('roomsListUpdate', (rooms) => {
+      io.of('/').to(IO_ROOMS.ROOMS).emit('updateRoomList', rooms);
+    });
     this.io.on('connection', (socket) => {
-      if (socket.handshake.query.name && users.createUser(socket.id, String(socket.handshake.query.name))) {
+      const socketId = socket.id;
+      if (socket.handshake.query.name && users.createUser(socketId, String(socket.handshake.query.name))) {
         console.log('userIsCreated');
         socket.join(IO_ROOMS.ROOMS);
-        console.log(socket.id);
-        this.rooms.addListener(socket.id);
+
+        // Отправляем список комнат
+        io.to(socketId).emit('updateRoomList', this.rooms.getRooms());
+
+        // this.rooms.add(socket.id);
       } else {
         socket.disconnect();
         console.log('user is exitst');
@@ -36,24 +43,24 @@ export class SocketInit {
         cb({ roomId, isSuccess: roomId !== '' });
       });
 
-      socket.on('joinToRoom', ({ roomId }, cb) => {
-        const res = this.rooms.joinToRoom({ socket, roomId });
-        cb({ isSuccess: !!res });
+      socket.on('addGamerToRoom', ({ roomId }, cb) => {
+        const room = this.rooms.addGamerToRoom({ socketId, roomId });
+        cb({ isSuccess: !!room });
       });
 
-      socket.on('leaveFromRoom', ({ roomId }) => {
-        this.rooms.removeFromRoomByIds({
+      socket.on('leaveGamerFromRoom', ({ roomId }) => {
+        this.rooms.removeGamerFromRoomById({
           roomId,
           socketId: socket.id,
         });
       });
 
-      socket.on('joinToRoomAsSpectator', ({ roomId }, callback) => {
-        callback(this.rooms.addSpectator(socket, roomId));
-      });
-      socket.on('leaveToRoomAsSpectator', ({ roomId }, callback) => {
-        callback(this.rooms.removeSpectator(socket, roomId));
-      });
+      // socket.on('joinToRoomAsSpectator', ({ roomId }, callback) => {
+      //   callback(this.rooms.addSpectator(socket, roomId));
+      // });
+      // socket.on('leaveToRoomAsSpectator', ({ roomId }, callback) => {
+      //   callback(this.rooms.removeSpectator(socket, roomId));
+      // });
 
       socket.emit('chatHistory', this.chat.getHistory());
       socket.join('chat');

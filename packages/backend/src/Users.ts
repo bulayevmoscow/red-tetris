@@ -1,5 +1,4 @@
 import { Logger } from './Logger';
-import { socket } from 'red-tetris-frontend/src/providers/socketIoAdapter';
 
 export class User {
   public socketId: string;
@@ -14,16 +13,12 @@ export default class Users {
   public static users = new Map<string, User>();
   constructor(private logger = new Logger()) {
     setInterval(() => {
-      console.clear();
-      console.log(Date.now());
-
-      console.log(Users.users);
+      // console.clear();
+      // console.log(Date.now());
+      // console.log(Users.users);
     }, 100);
   }
 
-  // getUserData = (socketID: string) => {
-  //   return Users.users.get(socketID);
-  // };
   getUserByName = (socketId: string): User | undefined => {
     return Users.users.get(socketId);
   };
@@ -35,7 +30,6 @@ export default class Users {
 
     return res?.[1];
   };
-
   createUser = (socketID: string, name: string) => {
     if (Users.users.get(name)) {
       this.logger.setMessage({ header: 'createUser[error]', params: { socketID, name } });
