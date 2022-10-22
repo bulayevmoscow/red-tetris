@@ -3,6 +3,7 @@ export type {
   TChatMessage,
   IO_ROOMS,
   TRoomInfo,
+  TChatResponse,
   TLoggerMessage,
   TGameField,
   TGameActionKeys,

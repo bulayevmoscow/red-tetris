@@ -12,18 +12,21 @@ export const Chat: React.FC = () => {
       sendMessage(msg);
     }
   };
+  console.log(chatMessages);
   return (
     <div>
       messages:
       <br />
-      {chatMessages.map((record, index) => {
-        return (
-          // @ts-ignore
-          <div key={index}>
-            {record.user}[{record.date}]: {record.message}[{record.id}]
-          </div>
-        );
-      })}
+      <>
+        {chatMessages.map((record, index) => {
+          return (
+            <div
+              style={{ paddingBottom: '5px' }}
+              key={index}
+            >{`${record.user}: ${record.date} == ${record.message}`}</div>
+          );
+        })}
+      </>
       <br />
       <input type="text" placeholder={'message'} ref={chatInputRef} />
       <button disabled={!isConnected} onClick={onSendMessage}>

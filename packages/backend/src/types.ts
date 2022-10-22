@@ -8,6 +8,12 @@ export type TChatMessage = {
   message: string;
 };
 
+export type TChatResponse = {
+  date: Date;
+  user: string;
+  message: string;
+};
+
 export type TLoggerMessage = { header: string; params?: Record<string, any> };
 
 type EventWithKnowledge<RES = undefined, REQ = undefined> = (data: REQ, callback: (responseData: RES) => void) => void;
@@ -19,6 +25,7 @@ export type TGameActionKeys = { up: boolean; down: boolean; left: boolean; right
 export const IO_ROOMS = {
   MAIN: '/',
   ROOMS: '/rooms',
+  CHAT: '/chat',
   LOGGERS: '/logs',
 } as const;
 
@@ -38,9 +45,8 @@ export type SocketInstance = Socket<
 
 export namespace SocketEvents {
   export type ServerToClientEvents = {
-    chatHistory: (arg: TChatMessage[]) => void;
-    newMessages: (arg: TChatMessage) => void;
-    updateChat: (arg: TChatMessage[]) => void;
+    newMessages: (arg: TChatResponse) => void;
+    updateChat: (arg: TChatResponse[]) => void;
     updateLogs: (arg: TLoggerMessage) => void;
     updateGame: (arg: TGameField) => void;
     // TODO add TS

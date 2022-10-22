@@ -1,38 +1,52 @@
-import { TChatMessage } from './types';
+import { TChatMessage, TChatResponse } from './types';
+import { EmitterFactory } from './utils/EmitterFactory';
 
-class Chat {
-  public messages: TChatMessage[];
+class Chat extends EmitterFactory<{ updateChat: TChatResponse[] }> {
+  static messages: TChatMessage[] = [
+    {
+      id: 0,
+      date: new Date(),
+      user: 'alex',
+      message: 'kekw',
+    },
+    {
+      id: 1,
+      date: new Date(),
+      user: 'alex2',
+      message: 'kekw2',
+    },
+  ];
   constructor() {
-    this.messages = [
-      {
-        id: 0,
-        date: new Date(),
-        user: 'alex',
-        message: 'kekw',
-      },
-      {
-        id: 1,
-        date: new Date(),
-        user: 'alex2',
-        message: 'kekw2',
-      },
-    ];
+    super();
   }
 
   addMessage = (user: string, message: string) => {
     const msg = {
-      id: this.messages.length,
+      id: Chat.messages.length,
       user,
       message,
       date: new Date(),
     };
-    this.messages.push(msg);
-    return msg;
+    Chat.messages.push(msg);
+    this.emit('updateChat', [
+      {
+        message: msg.message,
+        date: msg.date,
+        user: msg.user,
+      },
+    ]);
   };
 
   getHistory = (limit = 10) => {
-    return this.messages.slice(-1 * limit);
+    const historySlice: TChatResponse[] = Chat.messages.slice(-1 * limit).map((message) => {
+      return {
+        user: message.user,
+        date: message.date,
+        message: message.message,
+      };
+    });
+    this.emit('updateChat', historySlice);
   };
 }
 
-export default new Chat();
+export default Chat;
