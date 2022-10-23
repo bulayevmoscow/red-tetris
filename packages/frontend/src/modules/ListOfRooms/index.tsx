@@ -3,7 +3,8 @@ import React, { FC, useRef } from 'react';
 import { useListOfRooms } from '@/modules/ListOfRooms/useListOfRooms';
 import { socket } from '@/providers/socketIoAdapter';
 export const ListOfRooms: FC = () => {
-  const { listOfRooms, addGamerToRoom, leaveGamerFromRoom } = useListOfRooms();
+  const { listOfRooms, addGamerToRoom, removeGamerFromRoom, addSpectatorToRoom, removeSpectatorFromRoom } =
+    useListOfRooms();
   const roomNameRef = useRef<HTMLInputElement>(null);
   return (
     <div style={{ border: '1px solid red' }}>
@@ -15,9 +16,13 @@ export const ListOfRooms: FC = () => {
               <p>key: {room.key}</p>
               <p>name: {room.name}</p>
               <p>users: {room.users}</p>
+              {room.spectators && <p>spectators: {room.spectators}</p>}
               <div>
-                <button onClick={() => addGamerToRoom(room.key)}>join gamer to room</button>
-                <button onClick={() => leaveGamerFromRoom(room.key)}>remove gamer from room</button>
+                <button onClick={() => addGamerToRoom(room.key)}>addGamerToRoom</button>
+                <button onClick={() => removeGamerFromRoom(room.key)}>removeGamerFromRoom</button>
+                <br />
+                <button onClick={() => addSpectatorToRoom(room.key)}>addSpectatorToRoom</button>
+                <button onClick={() => removeSpectatorFromRoom(room.key)}>removeSpectatorFromRoom</button>
               </div>
               {/* <div>
                 <button onClick={() => joinToRoomAsSpectator(room.key)}>add spectator</button>

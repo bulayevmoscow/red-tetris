@@ -8,8 +8,12 @@ import { Login } from '@/modules/login/Login';
 import { ListOfUsers } from '@/modules/ListOfUsers';
 import { ListOfRooms } from '@/modules/ListOfRooms';
 
+const paramsString = window.location.search;
+const searchParams = new URLSearchParams(paramsString);
+
 export const App = () => {
   const [logger, setLogger] = useState(false);
+  const [logEnable] = useState(searchParams.get('log') ?? '');
   return (
     <SocketConnectProvider>
       <SocketChatProvider>
@@ -22,10 +26,12 @@ export const App = () => {
               <Chat />
             </div>
           )}
-          <div id="logger">
-            <button onClick={() => setLogger((prevState) => !prevState)}>Switch to only logs</button>
-            <Logger />
-          </div>
+          {logEnable && (
+            <div id="logger">
+              <button onClick={() => setLogger((prevState) => !prevState)}>Switch to only logs</button>
+              <Logger />
+            </div>
+          )}
         </>
       </SocketChatProvider>
     </SocketConnectProvider>

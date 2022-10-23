@@ -1,8 +1,8 @@
 import Server from './index';
-import Users from './Users';
+import Users, { User } from './Users';
 import Chat from './Chat';
 import Rooms from './Room';
-import { IO_ROOMS, TChatResponse } from './types';
+import { IO_ROOMS, TChatResponse, TRoomInfo } from './types';
 import { EventReceiver } from './utils/EmitterFactory';
 
 export class SocketInit {
@@ -12,6 +12,7 @@ export class SocketInit {
     private chat = new Chat(),
     private rooms = new Rooms()
   ) {
+    this.rooms.addRoom({roomName: '123', createdBy: undefined as unknown as User, isSingleGame: true})
     this.rooms.on('roomsListUpdate', (rooms) => {
       io.of('/').to(IO_ROOMS.ROOMS).emit('updateRoomList', rooms);
     });
@@ -32,7 +33,6 @@ export class SocketInit {
       socket.on('createRoom', ({ roomName, isSingleGame }, cb) => {
         const user = this.users.getUserBySocketId(socket.id);
         let roomId = '';
-        console.log(user);
         if (user && user?.name) {
           roomId = this.rooms.addRoom({
             roomName,
@@ -48,19 +48,22 @@ export class SocketInit {
         cb({ isSuccess: !!room });
       });
 
-      socket.on('leaveGamerFromRoom', ({ roomId }) => {
+      socket.on('removeGamerFromRoom', ({ roomId }) => {
         this.rooms.removeGamerFromRoomById({
           roomId,
           socketId: socket.id,
         });
       });
 
-      // socket.on('joinToRoomAsSpectator', ({ roomId }, callback) => {
-      //   callback(this.rooms.addSpectator(socket, roomId));
-      // });
-      // socket.on('leaveToRoomAsSpectator', ({ roomId }, callback) => {
-      //   callback(this.rooms.removeSpectator(socket, roomId));
-      // });
+      socket.on('addSpectatorToRoom', ({roomId}, cb) => {
+        const {disconnectCallback, status}  = this.rooms.addSpectator({roomId, socketId});
+        cb(roomId);
+      })
+
+      socket.on('removeSpectatorFromRoom', ({roomId}) => {
+        this.rooms.removeSpectator({roomId, socketId});
+      })
+
 
       const updateChatEmitter: EventReceiver<TChatResponse[]> = (messages) => {
         console.log('updateChat', messages.length);
@@ -68,11 +71,14 @@ export class SocketInit {
         io.in(IO_ROOMS.CHAT).emit('updateChat', messages);
       };
 
-      this.chat.on('updateChat', updateChatEmitter);
+      const updateRoomListEmitter: EventReceiver<TRoomInfo[]> = (args) => {
+        console.log('updateRoomListEmitter', Date.now());
+        // console.log(args);
+      }
 
-      // setInterval(() => {
-      //   socket.emit('updateChat', [{ user: '123', date: new Date(), message: '1111' }]);
-      // }, 5000);
+      this.chat.on('updateChat', updateChatEmitter);
+      this.rooms.on('roomsListUpdate', updateRoomListEmitter);
+
 
       socket.on('sendMessage', ({ message }) => {
         const user = this.users.getUserBySocketId(socket.id);
@@ -81,22 +87,21 @@ export class SocketInit {
         }
       });
 
-      //  socket init
 
-      // Отправляем список комнат
-      // io.to(socketId).emit('updateRoomList', this.rooms.getRooms());
 
-      // this.rooms.add(socket.id);
       setTimeout(() => {
         socket.join(IO_ROOMS.ROOMS);
         socket.join(IO_ROOMS.CHAT);
-        socket.join(IO_ROOMS.LOGGERS);
+        // Отправить пользователю исторю сообщений
         this.chat.getHistory();
+        socket.join(IO_ROOMS.LOGGERS);
+        this.rooms.updateRoomInfo();
         console.log('user rooms is', [...socket.rooms.keys()]);
-      }, 100);
+      }, 300);
 
       socket.on('disconnect', () => {
         this.chat.off('updateChat', updateChatEmitter);
+        this.rooms.off('roomsListUpdate', updateRoomListEmitter);
       });
     });
   }

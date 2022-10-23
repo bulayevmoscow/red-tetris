@@ -34,13 +34,14 @@ export type TRoomInfo = {
   isSingle: boolean;
   users: string;
   name: string;
+  spectators?: string
 };
 
 export type SocketInstance = Socket<
   SocketEvents.ClientToServerEvents,
   SocketEvents.ServerToClientEvents,
   DefaultEventsMap,
-  any
+  unknown
 >;
 
 export namespace SocketEvents {
@@ -57,9 +58,9 @@ export namespace SocketEvents {
     createRoom: EventWithKnowledge<{ isSuccess: boolean; roomId: string }, { roomName: string; isSingleGame: boolean }>;
     // Room
     addGamerToRoom: EventWithKnowledge<{ isSuccess: boolean }, { roomId: string }>;
-    leaveGamerFromRoom: EventWithKnowledge<undefined, { roomId: string }>;
-    addSpectators: EventWithKnowledge<string | undefined, { roomId: string }>;
-    leaveSpectatorFromRoom: EventWithKnowledge<boolean, { roomId: string }>;
+    removeGamerFromRoom: EventWithKnowledge<undefined, { roomId: string }>;
+    addSpectatorToRoom: EventWithKnowledge<string | undefined, { roomId: string }>;
+    removeSpectatorFromRoom: EventWithKnowledge<boolean, { roomId: string }>;
     //
 
     // test

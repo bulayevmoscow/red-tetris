@@ -6,7 +6,7 @@ import Users, { User } from './Users';
 import { Logger } from './Logger';
 import { EventEmitter } from 'events';
 import { EmitterFactory } from './utils/EmitterFactory';
-import { socket } from 'red-tetris-frontend/src/providers/socketIoAdapter';
+import { removeByValue } from './utils';
 
 type RoomEvents = {
   hello: 'listener';
@@ -20,6 +20,8 @@ const roomsDataParse = (rooms: Map<string, Room>): TRoomInfo[] => {
       isSingle: data.isSingleGame,
       users: JSON.stringify(data.gamers),
       name: data.name,
+      spectators: JSON.stringify(data.spectators)
+
     };
     return res;
   });
@@ -89,6 +91,8 @@ export class Room extends EmitterFactory<{ roomListUpdate: User[] }> {
       params: { user: user.name },
     });
     this.spectators.push(user);
+    console.log('addSpectators', this.spectators)
+    this.updateGamersList()
   };
 
   removeGamer = (user: User) => {
@@ -118,6 +122,7 @@ export class Room extends EmitterFactory<{ roomListUpdate: User[] }> {
         params: { user: user.name },
       });
       this.spectators.splice(userIndex, 1);
+      this.updateGamersList()
       return true;
     } else {
       this.logger.setMessage({
@@ -129,6 +134,17 @@ export class Room extends EmitterFactory<{ roomListUpdate: User[] }> {
   };
 }
 
+type RoomUsersEventReturnWithDisconnect = {
+  status: false
+  disconnectCallback: undefined
+} | {
+  status: true,
+  disconnectCallback: () => void
+}
+
+type RoomUsersEventReturnWithoutDisconnect = {
+  status: boolean
+}
 export default class Rooms extends EmitterFactory<{ roomsListUpdate: TRoomInfo[] }> {
   static readonly rooms: Map<string, Room> = new Map<string, Room>();
   constructor(private logger = new Logger(), private users = new Users()) {
@@ -148,6 +164,7 @@ export default class Rooms extends EmitterFactory<{ roomsListUpdate: TRoomInfo[]
   };
 
   updateRoomInfo = () => {
+    console.log(this.getRooms());
     this.emit('roomsListUpdate', this.getRooms());
   };
 
@@ -161,8 +178,8 @@ export default class Rooms extends EmitterFactory<{ roomsListUpdate: TRoomInfo[]
       'some name'
     );
     Rooms.rooms.set(roomId, game);
-    game.on('roomListUpdate', (User) => {
-      console.log('Event');
+    game.on('roomListUpdate', () => {
+      this.updateRoomInfo();
     });
     this.updateRoomInfo();
     return roomId;
@@ -214,26 +231,40 @@ export default class Rooms extends EmitterFactory<{ roomsListUpdate: TRoomInfo[]
     this.removeGamerFromRoom({ user, room });
   };
   // Добавление пользователя в обзорщики
-  addSpectator = (socket: SocketInstance, roomId: string) => {
+  addSpectator = ({ socketId, roomId }: { socketId: string; roomId: string }): RoomUsersEventReturnWithDisconnect => {
     const room = Rooms.rooms.get(roomId);
-    if (room) {
-      socket.join(room.roomId);
-      this.logger.setMessage({ header: `User ${socket.id} join to ${room.roomId}` });
-      socket.on('disconnect', () => {
-        this.logger.setMessage({ header: `User ${socket.id} disconnected from ${room.roomId}` });
-        socket.leave(room.roomId);
-      });
-      return roomId;
+    const user = this.users.getUserBySocketId(socketId);
+
+    if (room && user) {
+      room.spectators.push(user);
+
+      return {
+        status: true,
+        disconnectCallback: () => {
+          this.removeSpectator({socketId, roomId});
+        }
+      }
     }
-    return undefined;
+    return {
+      status: false
+    }
   };
-  removeSpectator = (socket: SocketInstance, roomId: string) => {
+  removeSpectator = ({ socketId, roomId }: { socketId: string; roomId: string }): RoomUsersEventReturnWithoutDisconnect => {
     const room = Rooms.rooms.get(roomId);
-    if (room) {
-      this.logger.setMessage({ header: `User ${socket.id} disconnected from ${room.roomId}` });
-      socket.leave(room.roomId);
-      return true;
+    const user = this.users.getUserBySocketId(socketId);
+
+      if (room && user && removeByValue(room.spectators, user)) {
+        this.logger.setMessage({ header: `User ${user.name} disconnected from ${room.roomId}` });
+
+        this.updateRoomInfo()
+        return {
+          status: true
+        }
+
     }
-    return false;
+    return {
+      status: false
+    }
   };
 }
+
